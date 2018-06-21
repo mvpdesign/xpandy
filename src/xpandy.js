@@ -10,20 +10,7 @@
 
 import configFactory from './config';
 import stateFactory from './state';
-
-function debounce(func, wait, immediate) {
-  var timeout;
-  return function() {
-    var context = this,
-      args = arguments;
-    clearTimeout(timeout);
-    timeout = setTimeout(function() {
-      timeout = null;
-      if (!immediate) func.apply(context, args);
-    }, wait);
-    if (immediate && !timeout) func.apply(context, args);
-  };
-}
+import { debounce } from './utils';
 
 const Xpandy = (container, config) => {
   // ------------------------------------------------
@@ -56,7 +43,7 @@ const Xpandy = (container, config) => {
     // and createPreview might go away
     const previewHTML = `
         <div class="Xpandy-wrapper">
-            ${config.arrow ? `<div class="Xpandy-arrow"></div>` : ``}
+            ${config.arrow ? '<div class="Xpandy-arrow"></div>' : ''}
             <div class="Xpandy-container">
                 <div class="Xpandy-body">
                     <div class="Xpandy-close--wrapper">
@@ -243,8 +230,8 @@ const Xpandy = (container, config) => {
 
     state._previewElements = item
       ? state._previewElements.filter(
-          _item => _item.parentItem.offsetTop !== item.offsetTop
-        )
+        _item => _item.parentItem.offsetTop !== item.offsetTop
+      )
       : [];
 
     return state;

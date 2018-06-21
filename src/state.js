@@ -1,4 +1,4 @@
-// I want to pull _preview out of state... but it isn't super pressing
+// TODO: I want to pull _preview out of state... but it isn't super pressing
 const stateFactory = () => {
   let statesArray = [];
 
@@ -11,7 +11,6 @@ const stateFactory = () => {
 
   // ---------------------------------------------------------------
   // Takes an element and sees if a state with that element as the container exists
-  // Returns BOOLEAN
 
   const stateExists = element =>
     statesArray.some(state => state.container === element);
