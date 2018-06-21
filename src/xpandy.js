@@ -1,0 +1,520 @@
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+// Xpandy 2.0
+// usage const expander = new Xpandy('.Xpandy', {});
+//
+// Browser Support, all evergreen browsers
+// Uses Array.find(), Array.includes(), Object.assign(), .remove()
+// Polyfills provided by core-js and are in the main.js file
+
+// TODO: Look into accessibility
+
+import configFactory from './config';
+import stateFactory from './state';
+
+function debounce(func, wait, immediate) {
+  var timeout;
+  return function() {
+    var context = this,
+      args = arguments;
+    clearTimeout(timeout);
+    timeout = setTimeout(function() {
+      timeout = null;
+      if (!immediate) func.apply(context, args);
+    }, wait);
+    if (immediate && !timeout) func.apply(context, args);
+  };
+}
+
+const Xpandy = (container, config) => {
+  // ------------------------------------------------
+  // Check if Xpandy has already been initialized on this container
+
+  // If a string is getting passed in, we will query for that element
+  // If it is anything else we will assume in good faith that it is a Node list
+  let elements =
+    typeof container === 'string'
+      ? document.querySelectorAll(container)
+      : container;
+
+  // If no elements are found matching `container`
+  if (!elements.length) {
+    return false;
+  }
+
+  // -------------------------------------------------
+
+  // TODO: Consider scoping the config and state to Xpandy
+  const manageConfig = configFactory(config);
+  const manageState = stateFactory();
+
+  // ------------------------------------------------
+  // CreatePreview
+
+  const createPreview = config => {
+    // TODO: add option to the config to manually set this config
+    // this should be the default... potentially this markup should be in the config
+    // and createPreview might go away
+    const previewHTML = `
+        <div class="Xpandy-wrapper">
+            ${config.arrow ? `<div class="Xpandy-arrow"></div>` : ``}
+            <div class="Xpandy-container">
+                <div class="Xpandy-body">
+                    <div class="Xpandy-close--wrapper">
+                        <span class="Xpandy-close"></span>
+                    </div>
+                    <div class="Xpandy-base"></div>
+                </div>
+            </div>
+        </div>
+        `;
+
+    return document.createRange().createContextualFragment(previewHTML);
+  };
+
+  // ------------------------------------------------
+  // TogglePreview
+
+  const togglePreview = obj => {
+    let { element, item } = obj;
+
+    const config = manageConfig.getConfig(element);
+    const state = manageState.getState(element);
+
+    // ------------------------------------------------
+    // Case #1
+    // There are no activeItems- so we are free to go ahead and open one
+    if (!state.activeItems) {
+      return openPreview({ element, item });
+    }
+
+    // ------------------------------------------------
+    // Case #2
+    // The active item is the one clicked on
+
+    // Potentially allow for multiple open items... not in the same row
+    // TODO: No IE support for Array.includes() Look into use of .some()
+    const itemIsActive = state.activeItems.includes(item);
+
+    if (itemIsActive) {
+      return closePreview({ element, item });
+    }
+
+    // ------------------------------------------------
+    // Case #3
+    // A new item is clicked on, and there are activeItems
+
+    // Check to see if any activeItems are on the same row
+    // Check to see if more than one preview row can be active at a time
+
+    // The goal is to get an array of items on the same row... there should be either 1 or 0
+    const itemOnSameRow = state.activeItems.find(
+      _item => _item.offsetTop === item.offsetTop
+    );
+
+    // if autoCloseOnOpen we will open or update
+    // if not autoCloseOnOpen we will open, close, or update
+
+    // If there are any items on the same row then we can just update it... no need for further checks
+    if (itemOnSameRow) {
+      return updatePreview({ element, item, itemOnSameRow });
+    }
+
+    // If you cannot have more than one open item... close all the previews
+    if (config.autoCloseOnOpen) {
+      closePreview({ element }, false);
+    }
+
+    // If there are no items on the same row we will create a new one
+    return openPreview({ element, item });
+  };
+
+  const closePreview = (obj, setState = true) => {
+    let { element, item } = obj;
+
+    // Setup
+    const config = manageConfig.getConfig(element);
+    const state = manageState.getState(element);
+
+    // ------------------------------------------------
+    // If the state is animating already...
+    // Or if there are no active items
+
+    if (state.isAnimating || !state.activeItems.length) return state;
+    state.isAnimating = setState;
+
+    // ------------------------------------------------
+
+    // if `el` is set, then just close the preview for that item
+    // -> we will have to get the preview that is being used for that row
+    // if `el` is not set then we will close all previews
+    const itemsToClose = item ? [item] : state.activeItems;
+
+    itemsToClose.forEach(_item => {
+      // TODO: offsetTop gives you the distance from the closest relatively positioned parent
+      //       it might not cause issues, so i'm leaving it for now, if in the future it does
+      //       i will create a getBoundingCLientRect() sort of function to get the real offsetTop
+      const previewOnSameRow = state._previewElements.find(
+        preview => preview.parentItem.offsetTop === _item.offsetTop
+      );
+
+      // ------------------------------------------------
+
+      if (config.arrow) {
+        let arrow = previewOnSameRow.preview.querySelector('.Xpandy-arrow');
+
+        arrow.classList.remove('Xpandy-arrow--isActive');
+      }
+
+      // ------------------------------------------------
+
+      const cleanUpClose = () => {
+        state.container.classList.remove('Xpandy--isExpanded');
+        _item.classList.remove('Xpandy-item--isActive');
+
+        previewOnSameRow.preview.removeEventListener(
+          'transitionend',
+          cleanUpClose,
+          false
+        );
+
+        // We are all done now, remove isAnimating state
+        state.isAnimating = false;
+
+        // This is not supported in IE11...
+        previewOnSameRow.preview.remove();
+
+        config.callbacks.onClose();
+      };
+
+      // ------------------------------------------------
+      // Update preview state classes
+
+      previewOnSameRow.preview.classList.remove('Xpandy-preview--isOpening');
+      previewOnSameRow.preview.classList.remove('Xpandy-preview--isUpdating');
+      previewOnSameRow.preview.classList.add('Xpandy-preview--isClosing');
+
+      // ------------------------------------------------
+
+      // Set some heights
+
+      const thumbnail = previewOnSameRow.parentItem.querySelector(
+        '.Xpandy-thumbnail'
+      );
+
+      // TODO: Find a better way to get margins
+      const thumbnailMargins =
+        parseInt(getComputedStyle(thumbnail)['margin-top']) +
+        parseInt(getComputedStyle(thumbnail)['margin-bottom']);
+
+      // TODO: See if .offsetHeight is a more performant way to get the height
+      // Potentially use the Xpandy-item to get the full height
+      const thumbnailHeight =
+        thumbnail.getBoundingClientRect().height + thumbnailMargins;
+
+      previewOnSameRow.parentItem.style.height = thumbnailHeight + 'px';
+      previewOnSameRow.preview.style.height = '0px';
+
+      // ------------------------------------------------
+
+      previewOnSameRow.preview.addEventListener(
+        'transitionend',
+        cleanUpClose,
+        false
+      );
+    });
+
+    // End .forEach itemsToClose
+    // ------------------------------------------------
+    // Cleanup the state
+
+    // If `el` is getting passed into this function
+    // then that means we only want to close one item
+    // so use .filter() to remove that item from state.activeItems
+    // else if `el` is not getting passed in, then close them all
+    state.activeItems = item
+      ? state.activeItems.filter(_item => _item !== item)
+      : [];
+
+    // Remove from _previveElements the preview we are closing
+    // If there is el we just remove the one... if this is a global close then it doesn't matter
+    // and we can dump the whole thing
+    // The previewElement may be housed under a different `el` than the one clicked on
+    // So we compare offsetTop to see which one to close
+
+    state._previewElements = item
+      ? state._previewElements.filter(
+          _item => _item.parentItem.offsetTop !== item.offsetTop
+        )
+      : [];
+
+    return state;
+  };
+
+  // ------------------------------------------------
+
+  const openPreview = obj => {
+    let { element, item } = obj;
+
+    // ------------------------------------------------
+    // Setup
+
+    const state = manageState.getState(element);
+    const config = manageConfig.getConfig(element);
+
+    // ------------------------------------------------
+    // If the state is animating it means we are in the process of opening an item
+    // Bail on future update events until that is done
+
+    if (state.isAnimating) return state;
+    state.isAnimating = true;
+
+    // ------------------------------------------------
+
+    // Add the preview item to the el about to be opened
+    item.appendChild(state._preview.cloneNode(true));
+
+    // (1) Fetch the preview element itself
+    // (2) This is the body of the preview
+    // (3) This is the content of the Xpandy-item that is active
+    const preview = item.querySelector('.Xpandy-wrapper'); // (1)
+    const previewBody = item.querySelector('.Xpandy-base'); // (2)
+    const itemContent = item.querySelector('.Xpandy-content'); // (3)
+
+    // ------------------------------------------------
+    // Position the arrow... if we need to
+
+    if (config.arrow) {
+      preview.style.overflow = 'hidden';
+
+      // TODO: MAGIC NUMBERS! This is a random delay to prevent overlap
+      //       there has to be a better way to do this
+      setTimeout(() => {
+        preview.style.overflow = '';
+
+        const arrow = item.querySelector('.Xpandy-arrow');
+        const itemBoundingRect = item.getBoundingClientRect();
+
+        arrow.classList.add('Xpandy-arrow--isActive');
+
+        // This is going to center the arrow under the active item
+        const leftOffset = itemBoundingRect.left + itemBoundingRect.width / 2;
+
+        arrow.style.left = leftOffset + 'px';
+      }, 200);
+    }
+
+    // ------------------------------------------------
+
+    const previewAnimationEnd = () => {
+      state.container.classList.add('Xpandy--isExpanded');
+      item.classList.add('Xpandy-item--isActive');
+
+      // We are all done now, remove isAnimating state
+      state.isAnimating = false;
+
+      preview.removeEventListener('transitionend', previewAnimationEnd, false);
+    };
+
+    preview.addEventListener('transitionend', previewAnimationEnd, false);
+
+    // ------------------------------------------------
+
+    previewBody.innerHTML = itemContent.innerHTML;
+
+    const previewHeight = previewBody.getBoundingClientRect().height;
+
+    const elementHeight = previewHeight + item.clientHeight;
+
+    // Prep the element by setting the existing height
+    item.style.height = item.clientHeight + 'px';
+
+    // These are in timeouts because browser become dumb trying to be smart
+    // and get the ordering wrong
+    setTimeout(() => (preview.style.height = previewHeight + 'px'), 0);
+    setTimeout(() => (item.style.height = elementHeight + 'px'), 0);
+
+    preview.classList.add('Xpandy-preview--isOpening');
+
+    // ------------------------------------------------
+
+    // Add the item to the arrow of active `_previewElements`
+    state._previewElements.push({
+      preview: preview,
+      parentItem: item
+    });
+
+    state.activeItems.push(item);
+
+    config.callbacks.onOpen();
+
+    return state;
+  };
+
+  // ------------------------------------------------
+
+  const updatePreview = obj => {
+    let { element, item, itemOnSameRow } = obj;
+
+    const state = manageState.getState(element);
+    const config = manageConfig.getConfig(element);
+
+    // ------------------------------------------------
+    // If the state is animating it means we are in the process of opening an item
+    // Bail on future update events until that is done
+
+    if (state.isAnimating) return state;
+    state.isAnimating = true;
+
+    // ------------------------------------------------
+
+    const newContent = item.querySelector('.Xpandy-content');
+
+    const previewOnSameRow = state._previewElements.find(
+      preview => preview.parentItem.offsetTop === item.offsetTop
+    );
+
+    let previewBase = previewOnSameRow.preview.querySelector('.Xpandy-base');
+
+    // ------------------------------------------------
+    // Update state.activeItems state by removing current active item
+    // and adding the new active item
+
+    state.activeItems = state.activeItems.filter(
+      _item => _item !== itemOnSameRow
+    );
+    state.activeItems.push(item);
+
+    // ------------------------------------------------
+    // Update preview action classes
+
+    previewOnSameRow.preview.classList.remove('Xpandy-preview--isOpening');
+    previewOnSameRow.preview.classList.remove('Xpandy-preview--isUpdating');
+
+    setTimeout(
+      () =>
+        previewOnSameRow.preview.classList.add('Xpandy-preview--isUpdating'),
+      0
+    );
+
+    // ------------------------------------------------
+
+    item.classList.add('Xpandy-item--isActive');
+    itemOnSameRow.classList.remove('Xpandy-item--isActive');
+
+    previewBase.innerHTML = newContent.innerHTML;
+
+    // ------------------------------------------------
+    // Set and update heights
+
+    const itemThumbnail = item.querySelector('.Xpandy-thumbnail');
+
+    // TODO: Find a better way to get margins
+    // Potentially use the Xpandy-item to get the full height
+    const thumbnailMargins =
+      parseInt(getComputedStyle(itemThumbnail)['margin-top']) +
+      parseInt(getComputedStyle(itemThumbnail)['margin-bottom']);
+
+    const previewHeight = previewBase.getBoundingClientRect().height;
+    const elementHeight =
+      previewHeight + itemThumbnail.clientHeight + thumbnailMargins;
+
+    previewOnSameRow.preview.style.height = previewHeight + 'px';
+    previewOnSameRow.parentItem.style.height = elementHeight + 'px';
+
+    // ------------------------------------------------
+
+    if (config.arrow) {
+      const arrow = previewOnSameRow.preview.querySelector('.Xpandy-arrow');
+      const itemBoundingRect = item.getBoundingClientRect();
+
+      // This is going to center the arrow under the active item
+      const leftOffset = itemBoundingRect.left + itemBoundingRect.width / 2;
+
+      arrow.style.left = leftOffset + 'px';
+    }
+
+    state.isAnimating = false;
+
+    config.callbacks.onUpdate();
+
+    return state;
+  };
+
+  // ------------------------------------------------
+
+  const returnInstanceOrInitialize = element => {
+    // And check if an instance exists... and just return it from here
+    if (manageState.stateExists(element)) {
+      return manageState.getState(element);
+    }
+
+    // Fetch the current config instance
+    // TODO: test that the config can be updated and
+    //       that those changes are reflected in the app
+    const config = manageConfig.register(element);
+
+    // TODO: createPreview... put this markup in the config
+    //        as mentioned in the TODO written in createPreview
+    // TODO: Make _preview private
+    // TODO: seperate state into it's own file
+    //       and consider how to get config into state
+    //       there might be an initializeState part and an manageState.getState part
+    //       kinda like how config is working now
+    const state = manageState.register(element);
+
+    state.items = config.items
+      ? Array.from(element.querySelectorAll(config.items))
+      : Array.from(element.children);
+
+    state._preview = createPreview(config);
+
+    element.classList.add('Xpandy--isActive');
+
+    // ------------------------------------------------
+    // Setup the events
+
+    // Click Thumbnail Events
+    state.items.forEach(item => {
+      // TODO: ERROR_REPORTING... if this doesn't exist
+      let thumbnail = item.querySelector('.Xpandy-thumbnail');
+
+      thumbnail.addEventListener('click', () =>
+        togglePreview({ element, item })
+      );
+    });
+
+    // ------------------------------------------------
+    // Window resize events
+
+    // The resize event from the top... it might not be the best way to handle resize events... also IE11
+    // We will close the preview on resize... at at later date we can come back to this isssue
+    // it would be nice to keep the preview pane open on resize... but that is messy
+
+    window.addEventListener(
+      'resize',
+      debounce(() => closePreview({ element }), 250)
+    );
+
+    // ------------------------------------------------
+    // Close X Events
+
+    // Using query selector all so in the future I can tag other elements with the close class
+    Array.from(state._preview.querySelectorAll('.Xpandy-close')).forEach(el =>
+      el.addEventListener('click', () => closePreview({ element, el }))
+    );
+
+    // ------------------------------------------------
+
+    // Trigger callbacks
+    config.callbacks.onInit();
+
+    return state;
+  };
+
+  // Return the Xpanders
+  return Array.from(elements).map(returnInstanceOrInitialize);
+};
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+export default Xpandy;
