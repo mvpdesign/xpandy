@@ -1,9 +1,10 @@
 const path = require('path');
 const webpack = require('webpack');
+const internalIp = require('internal-ip');
 
 module.exports = {
   mode: 'development',
-  entry: './src/index.js',
+  entry: './src/watch.js',
   output: {
     filename: './output.js',
     path: path.resolve(__dirname)
@@ -19,5 +20,8 @@ module.exports = {
         }
       }
     ]
+  },
+  serve: {
+    host: internalIp.v4.sync()
   }
 };

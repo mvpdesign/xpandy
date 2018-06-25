@@ -1,10 +1,6 @@
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 // Xpandy 2.0
 // usage const expander = new Xpandy('.Xpandy', {});
-//
-// Browser Support, all evergreen browsers
-// Uses Array.find(), Array.includes(), Object.assign(), .remove()
-// Polyfills provided by core-js and are in the main.js file
 
 // TODO: Look into accessibility
 
@@ -70,7 +66,7 @@ const Xpandy = (container, config) => {
     // ------------------------------------------------
     // Case #1
     // There are no activeItems- so we are free to go ahead and open one
-    if (!state.activeItems) {
+    if (!state.activeItems.length) {
       return openPreview({ element, item });
     }
 
@@ -489,6 +485,22 @@ const Xpandy = (container, config) => {
     Array.from(state._preview.querySelectorAll('.Xpandy-close')).forEach(el =>
       el.addEventListener('click', () => closePreview({ element, el }))
     );
+
+    // ------------------------------------------------
+    // Setup facade handlers
+
+    state.togglePreview = itemSelector => {
+      // If no item is given close all previews
+      if (!itemSelector) closePreview({ element });
+
+      let item =
+        typeof itemSelector === 'string'
+          ? document.querySelector(itemSelector)
+          : itemSelector;
+
+      // Use the normal toggle handler
+      return togglePreview({ element, item });
+    };
 
     // ------------------------------------------------
 

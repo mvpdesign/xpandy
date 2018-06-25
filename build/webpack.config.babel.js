@@ -2,7 +2,10 @@ import path from 'path';
 
 export default () => ({
   mode: 'production',
-  entry: './src/xpandy.js',
+  entry: {
+    main: './src/index.js',
+    polyfill: './src/polyfill.js'
+  },
   module: {
     rules: [
       {
@@ -14,7 +17,7 @@ export default () => ({
   },
   output: {
     path: path.resolve(__dirname, '../dist'),
-    filename: 'xpandy-bundle.js',
+    filename: 'xpandy-[name].min.js',
     library: 'Xpandy',
     libraryTarget: 'umd'
   }

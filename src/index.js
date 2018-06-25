@@ -1,5 +1,3 @@
-import Xpandy from './xpandy';
+import Xpandy from './Xpandy/xpandy.js';
 
-const xpander = new Xpandy('.Xpandy', {
-  arrow: false
-});
+export default Xpandy;
