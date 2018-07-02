@@ -5,15 +5,29 @@ const configFactory = userConfig => {
     autoCloseOnOpen: true,
     arrow: true,
     arrowPosition: 'right',
+    previewTemplate: config => `
+        <div class="Xpandy-wrapper">
+            ${config.arrow ? '<div class="Xpandy-arrow"></div>' : ''}
+            <div class="Xpandy-container">
+                <div class="Xpandy-body">
+                    <div class="Xpandy-close--wrapper">
+                        <span class="Xpandy-close"></span>
+                    </div>
+                    <div class="Xpandy-base"></div>
+                </div>
+            </div>
+        </div>
+        `,
     callbacks: {
       onInit: () => {},
-      onOpen: () => {},
-      onClose: () => {},
-      onUpdate: () => {}
+      onOpen: (item, state) => {},
+      onClose: (item, state) => {},
+      onUpdate: (item, state) => {}
     }
   };
 
-  // TODO: see if this needs to be saved...
+  // ------------------------------------------------
+
   let configsArray = [];
 
   const register = element => {

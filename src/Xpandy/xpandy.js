@@ -31,30 +31,6 @@ const Xpandy = (container, config) => {
   const manageState = stateFactory();
 
   // ------------------------------------------------
-  // CreatePreview
-
-  const createPreview = config => {
-    // TODO: add option to the config to manually set this config
-    // this should be the default... potentially this markup should be in the config
-    // and createPreview might go away
-    const previewHTML = `
-        <div class="Xpandy-wrapper">
-            ${config.arrow ? '<div class="Xpandy-arrow"></div>' : ''}
-            <div class="Xpandy-container">
-                <div class="Xpandy-body">
-                    <div class="Xpandy-close--wrapper">
-                        <span class="Xpandy-close"></span>
-                    </div>
-                    <div class="Xpandy-base"></div>
-                </div>
-            </div>
-        </div>
-        `;
-
-    return document.createRange().createContextualFragment(previewHTML);
-  };
-
-  // ------------------------------------------------
   // TogglePreview
 
   const togglePreview = obj => {
@@ -163,10 +139,11 @@ const Xpandy = (container, config) => {
         // We are all done now, remove isAnimating state
         state.isAnimating = false;
 
-        // This is not supported in IE11...
+        // This is not supported in IE11
+        // Currently a polyfill is being used
         previewOnSameRow.preview.remove();
 
-        config.callbacks.onClose();
+        config.callbacks.onClose(_item, state);
       };
 
       // ------------------------------------------------
@@ -267,12 +244,12 @@ const Xpandy = (container, config) => {
     // Position the arrow... if we need to
 
     if (config.arrow) {
-      preview.style.overflow = 'hidden';
+      // preview.style.overflow = 'hidden';
 
       // TODO: MAGIC NUMBERS! This is a random delay to prevent overlap
       //       there has to be a better way to do this
       setTimeout(() => {
-        preview.style.overflow = '';
+        // preview.style.overflow = '';
 
         const arrow = item.querySelector('.Xpandy-arrow');
         const itemBoundingRect = item.getBoundingClientRect();
@@ -283,14 +260,13 @@ const Xpandy = (container, config) => {
         const leftOffset = itemBoundingRect.left + itemBoundingRect.width / 2;
 
         arrow.style.left = leftOffset + 'px';
-      }, 200);
+      }, 125);
     }
 
     // ------------------------------------------------
 
     const previewAnimationEnd = () => {
       state.container.classList.add('Xpandy--isExpanded');
-      item.classList.add('Xpandy-item--isActive');
 
       // We are all done now, remove isAnimating state
       state.isAnimating = false;
@@ -317,6 +293,7 @@ const Xpandy = (container, config) => {
     setTimeout(() => (item.style.height = elementHeight + 'px'), 0);
 
     preview.classList.add('Xpandy-preview--isOpening');
+    item.classList.add('Xpandy-item--isActive');
 
     // ------------------------------------------------
 
@@ -328,7 +305,7 @@ const Xpandy = (container, config) => {
 
     state.activeItems.push(item);
 
-    config.callbacks.onOpen();
+    config.callbacks.onOpen(item, state);
 
     return state;
   };
@@ -418,7 +395,7 @@ const Xpandy = (container, config) => {
 
     state.isAnimating = false;
 
-    config.callbacks.onUpdate();
+    config.callbacks.onUpdate(item, state);
 
     return state;
   };
@@ -435,21 +412,15 @@ const Xpandy = (container, config) => {
     // TODO: test that the config can be updated and
     //       that those changes are reflected in the app
     const config = manageConfig.register(element);
-
-    // TODO: createPreview... put this markup in the config
-    //        as mentioned in the TODO written in createPreview
-    // TODO: Make _preview private
-    // TODO: seperate state into it's own file
-    //       and consider how to get config into state
-    //       there might be an initializeState part and an manageState.getState part
-    //       kinda like how config is working now
     const state = manageState.register(element);
 
     state.items = config.items
       ? Array.from(element.querySelectorAll(config.items))
       : Array.from(element.children);
 
-    state._preview = createPreview(config);
+    state._preview = document
+      .createRange()
+      .createContextualFragment(config.previewTemplate(config));
 
     element.classList.add('Xpandy--isActive');
 
@@ -482,6 +453,8 @@ const Xpandy = (container, config) => {
     // Close X Events
 
     // Using query selector all so in the future I can tag other elements with the close class
+    // TODO: This doesn't look like it will work just as is, I am passing the Xpandy-close
+    //       element into closePreview as `el`, but that function expects it to be the actual item to close
     Array.from(state._preview.querySelectorAll('.Xpandy-close')).forEach(el =>
       el.addEventListener('click', () => closePreview({ element, el }))
     );
