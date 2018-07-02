@@ -128,7 +128,6 @@ const Xpandy = (container, config) => {
 
       const cleanUpClose = () => {
         state.container.classList.remove('Xpandy--isExpanded');
-        _item.classList.remove('Xpandy-item--isActive');
 
         previewOnSameRow.preview.removeEventListener(
           'transitionend',
@@ -175,6 +174,8 @@ const Xpandy = (container, config) => {
       previewOnSameRow.preview.style.height = '0px';
 
       // ------------------------------------------------
+
+      _item.classList.remove('Xpandy-item--isActive');
 
       previewOnSameRow.preview.addEventListener(
         'transitionend',
