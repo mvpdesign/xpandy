@@ -43,6 +43,7 @@
 
 .Xpandy-body {
     overflow: hidden;
+    /* If adding Padding, add it here: padding: 20px 0; */
 }
 
 .Xpandy-arrow {

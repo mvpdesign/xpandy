@@ -235,11 +235,13 @@ const Xpandy = (container, config) => {
     item.appendChild(state._preview.cloneNode(true));
 
     // (1) Fetch the preview element itself
-    // (2) This is the body of the preview
-    // (3) This is the content of the Xpandy-item that is active
+    // (2) This is the container of the preview
+    // (3) This is the body of the preview
+    // (4) This is the content of the Xpandy-item that is active
     const preview = item.querySelector('.Xpandy-wrapper'); // (1)
-    const previewBody = item.querySelector('.Xpandy-base'); // (2)
-    const itemContent = item.querySelector('.Xpandy-content'); // (3)
+    const previewBody = item.querySelector('.Xpandy-body'); // (2)
+    const previewBase = item.querySelector('.Xpandy-base'); // (3)
+    const itemContent = item.querySelector('.Xpandy-content'); // (4)
 
     // ------------------------------------------------
     // Position the arrow... if we need to
@@ -279,7 +281,7 @@ const Xpandy = (container, config) => {
 
     // ------------------------------------------------
 
-    previewBody.innerHTML = itemContent.innerHTML;
+    previewBase.innerHTML = itemContent.innerHTML;
 
     const previewHeight = previewBody.getBoundingClientRect().height;
 
@@ -334,6 +336,7 @@ const Xpandy = (container, config) => {
       preview => preview.parentItem.offsetTop === item.offsetTop
     );
 
+    const previewBody = previewOnSameRow.preview.querySelector('.Xpandy-body');
     let previewBase = previewOnSameRow.preview.querySelector('.Xpandy-base');
 
     // ------------------------------------------------
@@ -375,7 +378,8 @@ const Xpandy = (container, config) => {
       parseInt(getComputedStyle(itemThumbnail)['margin-top']) +
       parseInt(getComputedStyle(itemThumbnail)['margin-bottom']);
 
-    const previewHeight = previewBase.getBoundingClientRect().height;
+    const previewHeight = previewBody.getBoundingClientRect().height;
+
     const elementHeight =
       previewHeight + itemThumbnail.clientHeight + thumbnailMargins;
 
