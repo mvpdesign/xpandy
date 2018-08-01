@@ -449,9 +449,16 @@ const Xpandy = (container, config) => {
     // We will close the preview on resize... at at later date we can come back to this isssue
     // it would be nice to keep the preview pane open on resize... but that is messy
 
+    let initialWidth = window.outerWidth;
+
     window.addEventListener(
       'resize',
-      debounce(() => closePreview({ element }), 250)
+      debounce(() => {
+        if (initialWidth !== window.outerWidth) {
+          initialWidth = window.outerWidth;
+          return closePreview({ element });
+        }
+      }, 250)
     );
 
     // ------------------------------------------------
