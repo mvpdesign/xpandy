@@ -3,6 +3,7 @@ const configFactory = userConfig => {
     container: null,
     items: null,
     autoCloseOnOpen: true,
+    equalHeights: false,
     arrow: true,
     arrowPosition: 'right',
     previewTemplate: config => `

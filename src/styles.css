@@ -10,10 +10,22 @@
 }
 
 .Xpandy-thumbnail {
-    height: 300px;
     width: 300px;
     background-color: grey;
     margin: 4px;
+}
+
+
+.BlockL {
+  height: 300px;
+}
+
+.BlockM {
+  height: 250px;
+}
+
+.BlockS {
+  height: 225px;
 }
 
 /* --------------------------------------------------------- */
@@ -62,7 +74,12 @@
     opacity: 0;
 }
 
-/* .Xpandy-close {} */
+.Xpandy-close {
+  height: 32px;
+  display: block;
+  width: 32px;
+  background-color: red;
+}
 
 .Xpandy-arrow {
     width: 0;

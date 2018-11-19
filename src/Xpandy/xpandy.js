@@ -306,6 +306,15 @@ const Xpandy = (container, config) => {
       parentItem: item
     });
 
+    // ------------------------------------------------
+    // Close X Events
+
+    Array.from(preview.querySelectorAll('.Xpandy-close')).forEach(el =>
+      el.addEventListener('click', () => closePreview({ element }))
+    );
+
+    // ------------------------------------------------
+
     state.activeItems.push(item);
 
     config.callbacks.onOpen(item, state);
@@ -406,6 +415,38 @@ const Xpandy = (container, config) => {
   };
 
   // ------------------------------------------------
+  // Equal Heights function
+
+  const equalHeights = obj => {
+    const { state } = obj;
+
+    let itemHeights = [];
+
+    state.items.map(item => {
+      item.style.height = '';
+      item.querySelector('.Xpandy-thumbnail').style.height = '';
+
+      if (!itemHeights[item.offsetTop]) {
+        itemHeights[item.offsetTop] = [];
+      }
+
+      itemHeights[item.offsetTop].push(item.querySelector('.Xpandy-thumbnail'));
+    });
+
+    Object.keys(itemHeights).map(key => {
+      const maxHeight = itemHeights[key].reduce((height, item) => {
+        let itemHeight = item.getBoundingClientRect().height;
+
+        return itemHeight > height ? itemHeight : height;
+      }, 0);
+
+      return itemHeights[key].map(
+        item => (item.style.height = maxHeight + 'px')
+      );
+    });
+  };
+
+  // ------------------------------------------------
 
   const returnInstanceOrInitialize = element => {
     // And check if an instance exists... and just return it from here
@@ -456,19 +497,10 @@ const Xpandy = (container, config) => {
       debounce(() => {
         if (initialWidth !== window.outerWidth) {
           initialWidth = window.outerWidth;
+          equalHeights({ state });
           return closePreview({ element });
         }
       }, 250)
-    );
-
-    // ------------------------------------------------
-    // Close X Events
-
-    // Using query selector all so in the future I can tag other elements with the close class
-    // TODO: This doesn't look like it will work just as is, I am passing the Xpandy-close
-    //       element into closePreview as `el`, but that function expects it to be the actual item to close
-    Array.from(state._preview.querySelectorAll('.Xpandy-close')).forEach(el =>
-      el.addEventListener('click', () => closePreview({ element, el }))
     );
 
     // ------------------------------------------------
@@ -486,6 +518,11 @@ const Xpandy = (container, config) => {
       // Use the normal toggle handler
       return togglePreview({ element, item });
     };
+
+    // ------------------------------------------------
+    // Set equal heights if it is enabled
+
+    if (config.equalHeights) equalHeights({ state });
 
     // ------------------------------------------------
 
