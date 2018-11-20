@@ -422,6 +422,7 @@ const Xpandy = (container, config) => {
 
     let itemHeights = [];
 
+    // https://stackoverflow.com/questions/19669786/check-if-element-is-visible-in-dom
     state.items.map(item => {
       item.style.height = '';
       item.querySelector('.Xpandy-thumbnail').style.height = '';
@@ -441,7 +442,8 @@ const Xpandy = (container, config) => {
       }, 0);
 
       return itemHeights[key].map(
-        item => (item.style.height = maxHeight + 'px')
+        item =>
+          item.style.display == 'none' || (item.style.height = maxHeight + 'px')
       );
     });
   };
@@ -490,16 +492,11 @@ const Xpandy = (container, config) => {
     // We will close the preview on resize... at at later date we can come back to this isssue
     // it would be nice to keep the preview pane open on resize... but that is messy
 
-    let initialWidth = window.outerWidth;
-
     window.addEventListener(
       'resize',
       debounce(() => {
-        if (initialWidth !== window.outerWidth) {
-          initialWidth = window.outerWidth;
-          equalHeights({ state });
-          return closePreview({ element });
-        }
+        equalHeights({ state });
+        return closePreview({ element });
       }, 250)
     );
 
