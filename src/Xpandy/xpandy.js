@@ -441,10 +441,11 @@ const Xpandy = (container, config) => {
         return itemHeight > height ? itemHeight : height;
       }, 0);
 
-      return itemHeights[key].map(
-        item =>
-          item.style.display == 'none' || (item.style.height = maxHeight + 'px')
-      );
+      return itemHeights[key].map(item => {
+        if (item.style.display == 'none' || maxHeight == 0) return false;
+
+        return (item.style.height = maxHeight + 'px');
+      });
     });
   };
 
