@@ -33,10 +33,10 @@ const xpandy = new Xpandy('.Xpandy', {
   arrow: true,
   arrowPosition: 'right',
   callbacks: {
-    onInit: () => {},
-    onOpen: () => {},
-    onClose: () => {},
-    onUpdate: () => {}
+    onInit: (item, state) => {},
+    onOpen: (item, state) => {},
+    onClose: (item, state) => {},
+    onUpdate: (item, state) => {}
   }
 });
 ```
