@@ -22,7 +22,7 @@ const configFactory = userConfig => {
         </div>
         `,
     callbacks: {
-      onInit: () => {},
+      onInit: state => {},
       onOpen: (item, state) => {},
       onClose: (item, state) => {},
       onUpdate: (item, state) => {}
