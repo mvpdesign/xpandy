@@ -416,12 +416,7 @@ const Xpandy = (container, config) => {
 
   // ------------------------------------------------
 
-  const returnInstanceOrInitialize = element => {
-    // And check if an instance exists... and just return it from here
-    if (manageState.stateExists(element)) {
-      return manageState.getState(element);
-    }
-
+  const initialize = element => {
     // Fetch the current config instance
     // TODO: test that the config can be updated and
     //       that those changes are reflected in the app
@@ -492,14 +487,14 @@ const Xpandy = (container, config) => {
 
     // Trigger callbacks
     if (functionExists(config.callbacks.onInit)) {
-      config.callbacks.onInit();
+      config.callbacks.onInit(state);
     }
 
     return state;
   };
 
   // Return the Xpanders
-  return Array.from(elements).map(returnInstanceOrInitialize);
+  return Array.from(elements).map(initialize);
 };
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

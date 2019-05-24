@@ -6,14 +6,7 @@ const stateFactory = () => {
   // Takes an element and sees if a state with that element as the container exists
   // Returns the element or and empty array
 
-  const getState = element =>
-    statesArray.find(state => state.container === element);
-
-  // ---------------------------------------------------------------
-  // Takes an element and sees if a state with that element as the container exists
-
-  const stateExists = element =>
-    statesArray.some(state => state.container === element);
+  const getState = element => statesArray.find(state => state.container === element);
 
   // ---------------------------------------------------------------
 
@@ -34,7 +27,7 @@ const stateFactory = () => {
 
   // ---------------------------------------------------------------
 
-  return { getState, stateExists, register };
+  return { getState, register };
 };
 
 export default stateFactory;
