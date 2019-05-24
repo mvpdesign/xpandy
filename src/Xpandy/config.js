@@ -10,11 +10,13 @@ const configFactory = userConfig => {
         <div class="Xpandy-wrapper">
             ${config.arrow ? '<div class="Xpandy-arrow"></div>' : ''}
             <div class="Xpandy-container">
-                <div class="Xpandy-body">
-                    <div class="Xpandy-close--wrapper">
-                        <span class="Xpandy-close"></span>
+                <div class="Xpandy-innerContainer">
+                    <div class="Xpandy-body">
+                        <div class="Xpandy-close--wrapper">
+                            <span class="Xpandy-close"></span>
+                        </div>
+                        <div class="Xpandy-base"></div>
                     </div>
-                    <div class="Xpandy-base"></div>
                 </div>
             </div>
         </div>
@@ -40,8 +42,7 @@ const configFactory = userConfig => {
     return newConfig;
   };
 
-  const getConfig = element =>
-    configsArray.find(config => config.container === element);
+  const getConfig = element => configsArray.find(config => config.container === element);
 
   // TODO: write an update config function
 

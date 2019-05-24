@@ -2,11 +2,9 @@
 // Xpandy 2.0
 // usage const expander = new Xpandy('.Xpandy', {});
 
-// TODO: Look into accessibility
-
 import configFactory from './config';
 import stateFactory from './state';
-import { debounce } from './utils';
+import { debounce, functionExists } from './utils';
 
 const Xpandy = (container, config) => {
   // ------------------------------------------------
@@ -14,10 +12,7 @@ const Xpandy = (container, config) => {
 
   // If a string is getting passed in, we will query for that element
   // If it is anything else we will assume in good faith that it is a Node list
-  let elements =
-    typeof container === 'string'
-      ? document.querySelectorAll(container)
-      : container;
+  let elements = typeof container === 'string' ? document.querySelectorAll(container) : container;
 
   // If no elements are found matching `container`
   if (!elements.length) {
@@ -66,9 +61,7 @@ const Xpandy = (container, config) => {
     // Check to see if more than one preview row can be active at a time
 
     // The goal is to get an array of items on the same row... there should be either 1 or 0
-    const itemOnSameRow = state.activeItems.find(
-      _item => _item.offsetTop === item.offsetTop
-    );
+    const itemOnSameRow = state.activeItems.find(_item => _item.offsetTop === item.offsetTop);
 
     // if autoCloseOnOpen we will open or update
     // if not autoCloseOnOpen we will open, close, or update
@@ -112,9 +105,7 @@ const Xpandy = (container, config) => {
       // TODO: offsetTop gives you the distance from the closest relatively positioned parent
       //       it might not cause issues, so i'm leaving it for now, if in the future it does
       //       i will create a getBoundingCLientRect() sort of function to get the real offsetTop
-      const previewOnSameRow = state._previewElements.find(
-        preview => preview.parentItem.offsetTop === _item.offsetTop
-      );
+      const previewOnSameRow = state._previewElements.find(preview => preview.parentItem.offsetTop === _item.offsetTop);
 
       // ------------------------------------------------
 
@@ -129,11 +120,7 @@ const Xpandy = (container, config) => {
       const cleanUpClose = () => {
         state.container.classList.remove('Xpandy--isExpanded');
 
-        previewOnSameRow.preview.removeEventListener(
-          'transitionend',
-          cleanUpClose,
-          false
-        );
+        previewOnSameRow.preview.removeEventListener('transitionend', cleanUpClose, false);
 
         // We are all done now, remove isAnimating state
         state.isAnimating = false;
@@ -142,7 +129,9 @@ const Xpandy = (container, config) => {
         // Currently a polyfill is being used
         previewOnSameRow.preview.remove();
 
-        config.callbacks.onClose(_item, state);
+        if (functionExists(config.callbacks.onClose)) {
+          config.callbacks.onClose(_item, state);
+        }
       };
 
       // ------------------------------------------------
@@ -156,19 +145,14 @@ const Xpandy = (container, config) => {
 
       // Set some heights
 
-      const thumbnail = previewOnSameRow.parentItem.querySelector(
-        '.Xpandy-thumbnail'
-      );
+      const thumbnail = previewOnSameRow.parentItem.querySelector('.Xpandy-thumbnail');
 
       // TODO: Find a better way to get margins
-      const thumbnailMargins =
-        parseInt(getComputedStyle(thumbnail)['margin-top']) +
-        parseInt(getComputedStyle(thumbnail)['margin-bottom']);
+      const thumbnailMargins = parseInt(getComputedStyle(thumbnail)['margin-top']) + parseInt(getComputedStyle(thumbnail)['margin-bottom']);
 
       // TODO: See if .offsetHeight is a more performant way to get the height
       // Potentially use the Xpandy-item to get the full height
-      const thumbnailHeight =
-        thumbnail.getBoundingClientRect().height + thumbnailMargins;
+      const thumbnailHeight = thumbnail.getBoundingClientRect().height + thumbnailMargins;
 
       previewOnSameRow.parentItem.style.height = thumbnailHeight + 'px';
       previewOnSameRow.preview.style.height = '0px';
@@ -177,11 +161,7 @@ const Xpandy = (container, config) => {
 
       _item.classList.remove('Xpandy-item--isActive');
 
-      previewOnSameRow.preview.addEventListener(
-        'transitionend',
-        cleanUpClose,
-        false
-      );
+      previewOnSameRow.preview.addEventListener('transitionend', cleanUpClose, false);
     });
 
     // End .forEach itemsToClose
@@ -192,9 +172,7 @@ const Xpandy = (container, config) => {
     // then that means we only want to close one item
     // so use .filter() to remove that item from state.activeItems
     // else if `el` is not getting passed in, then close them all
-    state.activeItems = item
-      ? state.activeItems.filter(_item => _item !== item)
-      : [];
+    state.activeItems = item ? state.activeItems.filter(_item => _item !== item) : [];
 
     // Remove from _previveElements the preview we are closing
     // If there is el we just remove the one... if this is a global close then it doesn't matter
@@ -202,11 +180,7 @@ const Xpandy = (container, config) => {
     // The previewElement may be housed under a different `el` than the one clicked on
     // So we compare offsetTop to see which one to close
 
-    state._previewElements = item
-      ? state._previewElements.filter(
-        _item => _item.parentItem.offsetTop !== item.offsetTop
-      )
-      : [];
+    state._previewElements = item ? state._previewElements.filter(_item => _item.parentItem.offsetTop !== item.offsetTop) : [];
 
     return state;
   };
@@ -236,10 +210,10 @@ const Xpandy = (container, config) => {
 
     // (1) Fetch the preview element itself
     // (2) This is the container of the preview
-    // (3) This is the body of the preview
+    // (3) This is the innerContainer of the preview that wraps the body
     // (4) This is the content of the Xpandy-item that is active
     const preview = item.querySelector('.Xpandy-wrapper'); // (1)
-    const previewBody = item.querySelector('.Xpandy-body'); // (2)
+    const previewInnerContainer = item.querySelector('.Xpandy-innerContainer'); // (2)
     const previewBase = item.querySelector('.Xpandy-base'); // (3)
     const itemContent = item.querySelector('.Xpandy-content'); // (4)
 
@@ -283,7 +257,7 @@ const Xpandy = (container, config) => {
 
     previewBase.innerHTML = itemContent.innerHTML;
 
-    const previewHeight = previewBody.getBoundingClientRect().height;
+    const previewHeight = previewInnerContainer.getBoundingClientRect().height;
 
     const elementHeight = previewHeight + item.clientHeight;
 
@@ -309,15 +283,15 @@ const Xpandy = (container, config) => {
     // ------------------------------------------------
     // Close X Events
 
-    Array.from(preview.querySelectorAll('.Xpandy-close')).forEach(el =>
-      el.addEventListener('click', () => closePreview({ element }))
-    );
+    Array.from(preview.querySelectorAll('.Xpandy-close')).forEach(el => el.addEventListener('click', () => closePreview({ element })));
 
     // ------------------------------------------------
 
     state.activeItems.push(item);
 
-    config.callbacks.onOpen(item, state);
+    if (functionExists(config.callbacks.onOpen)) {
+      config.callbacks.onOpen(item, state);
+    }
 
     return state;
   };
@@ -341,20 +315,16 @@ const Xpandy = (container, config) => {
 
     const newContent = item.querySelector('.Xpandy-content');
 
-    const previewOnSameRow = state._previewElements.find(
-      preview => preview.parentItem.offsetTop === item.offsetTop
-    );
+    const previewOnSameRow = state._previewElements.find(preview => preview.parentItem.offsetTop === item.offsetTop);
 
-    const previewBody = previewOnSameRow.preview.querySelector('.Xpandy-body');
+    const previewInnerContainer = previewOnSameRow.preview.querySelector('.Xpandy-innerContainer');
     let previewBase = previewOnSameRow.preview.querySelector('.Xpandy-base');
 
     // ------------------------------------------------
     // Update state.activeItems state by removing current active item
     // and adding the new active item
 
-    state.activeItems = state.activeItems.filter(
-      _item => _item !== itemOnSameRow
-    );
+    state.activeItems = state.activeItems.filter(_item => _item !== itemOnSameRow);
     state.activeItems.push(item);
 
     // ------------------------------------------------
@@ -363,11 +333,7 @@ const Xpandy = (container, config) => {
     previewOnSameRow.preview.classList.remove('Xpandy-preview--isOpening');
     previewOnSameRow.preview.classList.remove('Xpandy-preview--isUpdating');
 
-    setTimeout(
-      () =>
-        previewOnSameRow.preview.classList.add('Xpandy-preview--isUpdating'),
-      0
-    );
+    setTimeout(() => previewOnSameRow.preview.classList.add('Xpandy-preview--isUpdating'), 0);
 
     // ------------------------------------------------
 
@@ -383,14 +349,11 @@ const Xpandy = (container, config) => {
 
     // TODO: Find a better way to get margins
     // Potentially use the Xpandy-item to get the full height
-    const thumbnailMargins =
-      parseInt(getComputedStyle(itemThumbnail)['margin-top']) +
-      parseInt(getComputedStyle(itemThumbnail)['margin-bottom']);
+    const thumbnailMargins = parseInt(getComputedStyle(itemThumbnail)['margin-top']) + parseInt(getComputedStyle(itemThumbnail)['margin-bottom']);
 
-    const previewHeight = previewBody.getBoundingClientRect().height;
+    const previewHeight = previewInnerContainer.getBoundingClientRect().height;
 
-    const elementHeight =
-      previewHeight + itemThumbnail.clientHeight + thumbnailMargins;
+    const elementHeight = previewHeight + itemThumbnail.clientHeight + thumbnailMargins;
 
     previewOnSameRow.preview.style.height = previewHeight + 'px';
     previewOnSameRow.parentItem.style.height = elementHeight + 'px';
@@ -409,7 +372,9 @@ const Xpandy = (container, config) => {
 
     state.isAnimating = false;
 
-    config.callbacks.onUpdate(item, state);
+    if (functionExists(config.callbacks.onUpdate)) {
+      config.callbacks.onUpdate(item, state);
+    }
 
     return state;
   };
@@ -463,13 +428,9 @@ const Xpandy = (container, config) => {
     const config = manageConfig.register(element);
     const state = manageState.register(element);
 
-    state.items = config.items
-      ? Array.from(element.querySelectorAll(config.items))
-      : Array.from(element.children);
+    state.items = config.items ? Array.from(element.querySelectorAll(config.items)) : Array.from(element.children);
 
-    state._preview = document
-      .createRange()
-      .createContextualFragment(config.previewTemplate(config));
+    state._preview = document.createRange().createContextualFragment(config.previewTemplate(config));
 
     element.classList.add('Xpandy--isActive');
 
@@ -481,9 +442,7 @@ const Xpandy = (container, config) => {
       // TODO: ERROR_REPORTING... if this doesn't exist
       let thumbnail = item.querySelector('.Xpandy-thumbnail');
 
-      thumbnail.addEventListener('click', () =>
-        togglePreview({ element, item })
-      );
+      thumbnail.addEventListener('click', () => togglePreview({ element, item }));
     });
 
     // ------------------------------------------------
@@ -512,12 +471,11 @@ const Xpandy = (container, config) => {
 
     state.togglePreview = itemSelector => {
       // If no item is given close all previews
-      if (!itemSelector) closePreview({ element });
+      if (!itemSelector) {
+        return closePreview({ element });
+      }
 
-      let item =
-        typeof itemSelector === 'string'
-          ? document.querySelector(itemSelector)
-          : itemSelector;
+      let item = typeof itemSelector === 'string' ? document.querySelector(itemSelector) : itemSelector;
 
       // Use the normal toggle handler
       return togglePreview({ element, item });
@@ -526,12 +484,16 @@ const Xpandy = (container, config) => {
     // ------------------------------------------------
     // Set equal heights if it is enabled
 
-    if (config.equalHeights) equalHeights({ state });
+    if (config.equalHeights) {
+      equalHeights({ state });
+    }
 
     // ------------------------------------------------
 
     // Trigger callbacks
-    config.callbacks.onInit();
+    if (functionExists(config.callbacks.onInit)) {
+      config.callbacks.onInit();
+    }
 
     return state;
   };

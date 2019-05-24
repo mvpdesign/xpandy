@@ -15,6 +15,14 @@
     margin: 4px;
 }
 
+.Xpandy-innerContainer {
+    padding: 40px 0;
+}
+
+.Xpandy-body {
+    padding: 20px;
+    background-color: lightgrey;
+}
 
 .BlockL {
   height: 300px;

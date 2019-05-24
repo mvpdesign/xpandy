@@ -14,4 +14,6 @@ const debounce = (func, wait, immediate) => {
   };
 };
 
-export { debounce };
+const functionExists = func => typeof func === 'function';
+
+export { debounce, functionExists };
