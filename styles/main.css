@@ -1,0 +1,111 @@
+/* --------------------------------------------------------- */
+/* Xpandy Core Styles */
+
+/* .Xpandy {} */
+
+.Xpandy-item {
+    transition: height 350ms ease-in-out;
+    cursor: pointer;
+}
+
+/* .Xpandy-thumbnail {} */
+
+.Xpandy-content {
+    display: none;
+}
+
+.Xpandy-wrapper {
+    transition: height 350ms ease-in-out;
+    position: absolute;
+    left: 0;
+    z-index: 1;
+    width: 100%;
+    height: 0;
+}
+
+.Xpandy-body {
+    overflow: hidden;
+    /* If adding Padding, add it here: padding: 20px 0; */
+}
+
+.Xpandy-arrow {
+    transition: left 350ms ease-in-out;
+    position: absolute;
+}
+
+.Xpandy-container {
+    overflow: hidden;
+    height: 100%;
+}
+
+.Xpandy-base {
+    overflow: hidden;
+    height: 100%;
+    opacity: 0;
+}
+
+.Xpandy-close {
+    height: 32px;
+    display: block;
+    width: 32px;
+    background-color: red;
+}
+
+.Xpandy-arrow {
+    width: 0;
+    height: 0;
+    border-left: 14px solid transparent;
+    border-right: 14px solid transparent;
+    border-bottom: 7px solid white;
+    transform: translateX(-50%);
+    transition: all 250ms linear;
+}
+
+.Xpandy-arrow.Xpandy-arrow--isActive {
+    transform: translate(-50%, -100%);
+    border-bottom: 14px solid white;
+}
+
+@keyframes fadeInUp {
+    0% {
+        opacity: 0;
+        transform: translateY(15px);
+    }
+
+    100% {
+        opacity: 1;
+        transform: translateY(0%);
+    }
+}
+
+@keyframes fadeIn {
+    0% {
+        opacity: 0;
+    }
+
+    100% {
+        opacity: 1;
+    }
+}
+
+@keyframes fadeOut {
+    0% {
+        opacity: 1;
+    }
+
+    100% {
+        opacity: 0;
+    }
+}
+
+.Xpandy-preview--isOpening .Xpandy-base {
+    animation: fadeInUp 350ms ease-in-out forwards 65ms;
+}
+
+.Xpandy-preview--isUpdating .Xpandy-base {
+    animation: fadeIn 350ms ease-in-out forwards 35ms;
+}
+
+.Xpandy-preview--isClosing .Xpandy-base {
+    animation: fadeOut 250ms ease-in-out forwards;
+}
