@@ -1,0 +1,19 @@
+{
+	"compilerOptions": {
+		"declaration": true,
+		"declarationMap": true,
+		"esModuleInterop": true,
+		"removeComments": true,
+		"lib": ["dom", "es6"],
+		"module": "es2015",
+		"moduleResolution": "node",
+		"noUnusedLocals": true,
+		"noImplicitAny": true,
+		"outDir": "dist",
+		"rootDir": "src",
+		"sourceMap": true,
+		"strict": true,
+		"target": "es5",
+		"types": []
+	}
+}
