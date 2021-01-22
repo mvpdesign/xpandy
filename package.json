@@ -1,40 +1,43 @@
 {
-	"name": "xpandy",
-	"version": "2.0.0-beta.1",
-	"description": "Kind of like Google Images meets an Accordion",
-	"module": "dist/index.js",
-	"main": "dist/xpandy.js",
-	"types": "dist/index.d.ts",
-	"files": [
-		"dist"
-	],
-	"repository": {
-		"type": "git",
-		"url": "git+https://github.com/mvpdesign/xpandy.git"
-	},
-	"keywords": [
-		"xpandy",
-		"google images",
-		"accordion"
-	],
-	"author": "chris, mvpdesign",
-	"license": "MIT",
-	"bugs": {
-		"url": "https://github.com/mvpdesign/xpandy/issues"
-	},
-	"homepage": "https://github.com/mvpdesign/xpandy#readme",
-	"devDependencies": {
-		"@rollup/plugin-commonjs": "^11.0.1",
-		"@rollup/plugin-node-resolve": "^6.1.0",
-		"@rollup/plugin-typescript": "^2.0.2",
-		"core-js": "^3.6.2",
-		"rollup": "^1.27.14",
-		"tslib": "^1.10.0",
-		"typescript": "^3.7.4"
-	},
-	"scripts": {
-		"clean": "rm -fr dist",
-		"build": "tsc -b && rollup -c",
-		"watch": "rollup -wc"
-	}
+  "name": "xpandy",
+  "version": "2.0.0-beta.2",
+  "description": "Kind of like Google Images meets an Accordion",
+  "module": "dist/index.js",
+  "main": "dist/xpandy.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mvpdesign/xpandy.git"
+  },
+  "keywords": [
+    "xpandy",
+    "google images",
+    "accordion"
+  ],
+  "author": "chris, mvpdesign",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/mvpdesign/xpandy/issues"
+  },
+  "homepage": "https://github.com/mvpdesign/xpandy#readme",
+  "devDependencies": {
+    "@rollup/plugin-commonjs": "^11.0.1",
+    "@rollup/plugin-node-resolve": "^6.1.0",
+    "@rollup/plugin-typescript": "^2.0.2",
+    "core-js": "^3.6.2",
+    "rollup": "^1.27.14",
+    "tslib": "^1.10.0",
+    "typescript": "^3.7.4"
+  },
+  "scripts": {
+    "clean": "rm -fr dist",
+    "build": "tsc -b && rollup -c",
+    "watch": "rollup -wc"
+  },
+  "dependencies": {
+    "rollup-plugin-uglify": "^6.0.4"
+  }
 }
